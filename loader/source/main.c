@@ -78,7 +78,7 @@ static GXRModeObj *vmode = NULL;
 
 static unsigned char ESBootPatch[] =
 {
-    0x48, 0x03, 0x49, 0x04, 0x47, 0x78, 0x46, 0xC0, 0xE6, 0x00, 0x08, 0x70, 0xE1, 0x2F, 0xFF, 0x1E, 
+    0x48, 0x03, 0x49, 0x04, 0x47, 0x78, 0x46, 0xC0, 0xE6, 0x00, 0x08, 0x70, 0xE1, 0x2F, 0xFF, 0x1E,
     0x10, 0x10, 0x00, 0x00, 0x00, 0x00, 0x0D, 0x25,
 };
 /*static const unsigned char AHBAccessPattern[] =
@@ -91,11 +91,11 @@ static const unsigned char AHBAccessPatch[] =
 };*/
 static const unsigned char FSAccessPattern[] =
 {
-    0x9B, 0x05, 0x40, 0x03, 0x99, 0x05, 0x42, 0x8B, 
+    0x9B, 0x05, 0x40, 0x03, 0x99, 0x05, 0x42, 0x8B,
 };
 static const unsigned char FSAccessPatch[] =
 {
-    0x9B, 0x05, 0x40, 0x03, 0x1C, 0x0B, 0x42, 0x8B, 
+    0x9B, 0x05, 0x40, 0x03, 0x1C, 0x0B, 0x42, 0x8B,
 };
 
 // Forbid the use of MEM2 through malloc
@@ -135,7 +135,7 @@ static void updateMetaXml(void)
 {
 	char filepath[MAXPATHLEN];
 	bool dir_argument_exists = strlen(launch_dir);
-	
+
 	snprintf(filepath, sizeof(filepath), "%smeta.xml",
 		dir_argument_exists ? launch_dir : "/apps/Nintendont/");
 
@@ -518,7 +518,7 @@ static u32 CheckForMultiGameAndRegion(unsigned int CurDICMD, u32 *ISOShift, u32 
 			for (i = 0; i < gamecount; ++i)
 			{
 				const u32 color = gameIsUnaligned[i] ? MAROON : BLACK;
-				PrintFormat(DEFAULT_SIZE, color, MENU_POS_X, MENU_POS_Y + 20*4 + i * 20, "%50.50s [%.6s]%s", 
+				PrintFormat(DEFAULT_SIZE, color, MENU_POS_X, MENU_POS_Y + 20*4 + i * 20, "%50.50s [%.6s]%s",
 					    gi[i].Name, gi[i].ID, i == PosX ? ARROW_LEFT : " " );
 			}
 			GRRLIB_Render();
@@ -671,7 +671,7 @@ int main(int argc, char **argv)
 	//else if(*(vu16*)0xCD8005A0 != 0xCAFE)
 	//{
 		/* WiiVC seems to have some bug that without any fake IOS
-		   reload makes it impossible to read HW regs on PPC 
+		   reload makes it impossible to read HW regs on PPC
 		   and it seems to break some consoles to reload IOS */
 	//	IOS_ReloadIOS(58);
 	//}
@@ -813,7 +813,7 @@ int main(int argc, char **argv)
 				GRRLIB_Render();
 				ClearScreen();
 			}
-			
+
 			FPAD_Update();
 
 			if (FPAD_Cancel(0)) {
@@ -1123,16 +1123,24 @@ int main(int argc, char **argv)
 		while(!__SYS_SyncSram());
 	}
 
+	//Check if game is Triforce game
+	u32 IsTRIGame = 0;
+	if (ncfg->GameID != 0x47545050) //Damn you Knights Of The Temple!
+		IsTRIGame = TRISetupGames(ncfg->GamePath, CurDICMD, ISOShift);
+
+    if(IsTRIGame != 0)
+	{
+		// Create saves directory.
+		char BasePath[20];
+		snprintf(BasePath, sizeof(BasePath), "%s:/saves", GetRootDevice());
+		f_mkdir_char(BasePath);
+	}
+
 	#define GCN_IPL_SIZE 2097152
 	#define TRI_IPL_SIZE 1048576
 	void *iplbuf = NULL;
 	bool useipl = false;
 	bool useipltri = false;
-
-	//Check if game is Triforce game
-	u32 IsTRIGame = 0;
-	if (ncfg->GameID != 0x47545050) //Damn you Knights Of The Temple!
-		IsTRIGame = TRISetupGames(ncfg->GamePath, CurDICMD, ISOShift);
 
 	if (!(ncfg->Config & (NIN_CFG_SKIP_IPL)))
 	{
@@ -1409,7 +1417,7 @@ int main(int argc, char **argv)
 
 		case BI2_REGION_USA:
 			if ((vidForce && vidForceMode == NIN_VID_FORCE_MPAL) ||
-			    (!vidForce && ((CONF_GetVideo() == CONF_VIDEO_MPAL) 
+			    (!vidForce && ((CONF_GetVideo() == CONF_VIDEO_MPAL)
 					|| (useipl && memcmp(iplbuf+0x55,"MPAL",4) == 0))))
 			{
 				// PAL-M
@@ -1497,7 +1505,7 @@ int main(int argc, char **argv)
 		__SYS_UnlockSram(1); // 1 -> write changes
 		while(!__SYS_SyncSram());
 	}
-	
+
 	ReconfigVideo(vmode);
 	VIDEO_SetBlack(FALSE);
 	VIDEO_Flush();
